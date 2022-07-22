@@ -37,14 +37,22 @@ impl Display for Word {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}\n", self.word.bold().underline())?;
 
-        write!(f, "{}", "\nPhonetics".underline())?;
+        if !self.phonetics.is_empty() {
+            write!(f, "{}", "Phonetics\n".underline())?;
+        }
         for phonetic in &self.phonetics {
-            write!(f, "\n\t- {}", phonetic)?;
+            write!(f, "\t- {}\n", phonetic)?;
         }
 
-        write!(f, "{}", "\n\nMeanings".underline())?;
+        if !self.meanings.is_empty() {
+            write!(f, "{}", "Meanings\n".underline())?;
+        }
         for (i, meaning) in self.meanings.iter().enumerate() {
-            write!(f, "\n\n{}: {}", i + 1, meaning)?;
+            write!(f, "{}: {}\n", i + 1, meaning)?;
+
+            if i < self.meanings.len() - 1 {
+                write!(f, "\n")?;
+            }
         }
 
         Ok(())
@@ -62,34 +70,33 @@ struct Meaning {
 
 impl Display for Meaning {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.partOfSpeech.blue())?;
+        write!(f, "{}\n", self.partOfSpeech.blue())?;
 
         for definition in &self.definitions {
-            write!(f, "\n\t- {}", definition)?;
+            write!(f, "\t- {}\n", definition)?;
+        }
+
+        if !self.synonyms.is_empty() || !self.antonyms.is_empty() {
+            write!(f, "\n")?;
         }
 
         if !self.synonyms.is_empty() {
-            write!(
-                f,
-                "\n\n\t{}: {}",
-                "Synonyms".red(),
-                self.synonyms.join(", ")
-            )?;
+            write!(f, "\t{}: {}", "Synonyms".red(), self.synonyms.join(", "))?;
         }
 
         if !self.antonyms.is_empty() {
-            write!(
-                f,
-                "\n\n\t{}: {}",
-                "Antonyms".red(),
-                self.antonyms.join(", ")
-            )?;
+            write!(f, "\n")?;
+        }
+
+        if !self.antonyms.is_empty() {
+            write!(f, "\t{}: {}", "Antonyms".red(), self.antonyms.join(", "))?;
         }
 
         Ok(())
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Definition {
     definition: String,
@@ -106,24 +113,25 @@ impl Display for Definition {
             write!(f, " ({})", example.purple())?;
         }
 
-        for synonym in &self.synonyms {
-            write!(f, "\n{}", synonym)?;
-        }
+        // for synonym in &self.synonyms {
+        //     write!(f, "{}\n", synonym)?;
+        // }
 
-        for antonym in &self.antonyms {
-            write!(f, "\n{}", antonym)?;
-        }
+        // for antonym in &self.antonyms {
+        //     write!(f, "{}\n", antonym)?;
+        // }
 
         Ok(())
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct Phonetic {
     text: Option<String>,
     audio: String,
-    _source_url: Option<String>,
-    _license: Option<License>,
+    source_url: Option<String>,
+    license: Option<License>,
 }
 
 impl Display for Phonetic {
@@ -131,21 +139,22 @@ impl Display for Phonetic {
         if let Some(text) = &self.text {
             write!(f, "{} ", text)?;
         } else {
-            write!(f, "[unavailable] ")?;
+            write!(f, "{}", "[unavailable] ".dimmed())?;
         }
 
         if self.audio.len() > 0 {
-            write!(f, "({})", self.audio)?;
+            write!(f, "({})", self.audio.dimmed())?;
         }
 
         Ok(())
     }
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 struct License {
-    _name: String,
-    _url: String,
+    name: String,
+    url: String,
 }
 
 /// Application to look up the meaning of a word
